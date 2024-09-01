@@ -1,31 +1,37 @@
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabaseClient';
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabaseClient'
 
-export default function Home({ user }) {
-  const router = useRouter();
+export default function Dashboard() {
+  const [user, setUser] = useState(null)
+  const [pendingOrders, setPendingOrders] = useState([])
+  const [ordersByStatus, setOrdersByStatus] = useState({})
+  const [dailyWork, setDailyWork] = useState([])
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
     }
-  }, [user]);
+    fetchUser()
+  }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData()
+    }
+  }, [user])
 
-  if (!user) {
-    return null; // or a loading spinner
+  const fetchDashboardData = async () => {
+    // Fetch pending orders, orders by status, and daily work
+    // This is a placeholder and should be replaced with actual API calls
   }
+
+  if (!user) return <div>Loading...</div>
 
   return (
     <div>
-      <h1>Welcome to the Dashboard</h1>
-      <p>You are logged in as: {user.email}</p>
-      <button onClick={handleLogout}>Logout</button>
-      {/* Add your dashboard content here */}
+      <h1>Dashboard</h1>
+      {/* Display dashboard components here */}
     </div>
-  );
+  )
 }
