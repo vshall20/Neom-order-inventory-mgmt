@@ -1,24 +1,41 @@
-import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
-import { SessionContextProvider } from '@supabase/auth-helpers-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useRouter } from 'next/router';
 
 function MyApp({ Component, pageProps }) {
-  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  const [user, setUser] = useState(null);
+  const router = useRouter();
 
-  const [supabaseClient] = useState(() => createPagesBrowserClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  }))
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const currentUser = session?.user;
+        setUser(currentUser ?? null);
+
+        if (event === 'SIGNED_IN' && currentUser) {
+          router.push('/');
+        }
+        if (event === 'SIGNED_OUT') {
+          router.push('/login');
+        }
+      }
+    );
+
+    checkUser();
+
+    return () => {
+      authListener.unsubscribe();
+    };
+  }, []);
+
+  async function checkUser() {
+    const user = supabase.auth.user();
+    setUser(user);
+  }
 
   return (
-    <SessionContextProvider
-      supabaseClient={supabaseClient}
-      initialSession={pageProps.initialSession}
-    >
-      <Component {...pageProps} />
-    </SessionContextProvider>
-  )
+    <Component {...pageProps} user={user} />
+  );
 }
 
-export default MyApp
+export default MyApp;
