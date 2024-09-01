@@ -1,5 +1,4 @@
 import Head from 'next/head'
-import styles from '../styles/Home.module.css'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useEffect, useState } from 'react'
 
@@ -21,15 +20,15 @@ export default function Home() {
   }
 
   return (
-    <div className={styles.container}>
+    <div>
       <Head>
         <title>Order Management App</title>
         <meta name="description" content="Order Management App for Modular Kitchen Company" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
+      <main>
+        <h1>
           Welcome to Order Management App
         </h1>
 
@@ -43,7 +42,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className={styles.footer}>
+      <footer>
         <a
           href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
           target="_blank"
