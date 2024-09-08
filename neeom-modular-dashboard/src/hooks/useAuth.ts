@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PocketBase from "pocketbase";
 
 const pb = new PocketBase("http://127.0.0.1:8090");
@@ -12,7 +12,6 @@ interface User {
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
-  const refreshTimeoutRef = useRef<number | null>(null);
 
   const loadUser = useCallback(async () => {
     if (pb.authStore.isValid) {
@@ -47,9 +46,6 @@ export const useAuth = () => {
 
     return () => {
       unsubscribe();
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
     };
   }, [loadUser]);
 
