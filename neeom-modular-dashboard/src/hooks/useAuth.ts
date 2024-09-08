@@ -15,17 +15,19 @@ export const useAuth = () => {
 
   const loadUser = useCallback(async () => {
     if (pb.authStore.isValid) {
-      try {
-        const authData = await pb.collection("users").authRefresh();
-        setUser({
-          id: authData.record.id,
-          email: authData.record.email,
-          role: authData.record.role,
-        });
-        setIsAuthenticated(true);
-      } catch (error: unknown) {
-        console.error("Failed to refresh auth:", error);
-        if (error instanceof Error && 'status' in error && error.status === 401) {
+      if (!user || user.id !== pb.authStore.model?.id) {
+        try {
+          const userData = pb.authStore.model;
+          if (userData) {
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              role: userData.role,
+            });
+            setIsAuthenticated(true);
+          }
+        } catch (error) {
+          console.error("Failed to load user data:", error);
           pb.authStore.clear();
           setIsAuthenticated(false);
           setUser(null);
@@ -35,7 +37,7 @@ export const useAuth = () => {
       setIsAuthenticated(false);
       setUser(null);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadUser();
