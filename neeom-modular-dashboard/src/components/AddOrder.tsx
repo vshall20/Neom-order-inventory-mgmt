@@ -56,6 +56,10 @@ const AddOrder: React.FC = () => {
         console.log("User is not authenticated, skipping fetch");
         return;
       }
+      if (user?.role !== 'admin') {
+        console.log("User is not an admin, skipping fetch");
+        return;
+      }
       try {
         const areasResult = await pb.collection("areas").getFullList<Area>();
         const orderTypesResult = await pb
@@ -74,7 +78,7 @@ const AddOrder: React.FC = () => {
     };
 
     fetchAreasAndOrderTypes();
-  }, []);
+  }, [user]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
