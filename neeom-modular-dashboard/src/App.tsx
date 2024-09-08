@@ -1,24 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import PocketBase from 'pocketbase';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 
+const pb = new PocketBase('http://127.0.0.1:8090'); // Replace with your Pocketbase URL
+
 const App: React.FC = () => {
-  // TODO: Implement actual authentication check
-  const isAuthenticated = false;
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  useEffect(() => {
+    const authData = pb.authStore.model;
+    setIsAuthenticated(!!authData);
+  }, []);
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/dashboard"
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
-          />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route
+          path="/dashboard"
+          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
+        />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
     </Router>
   );
 };
