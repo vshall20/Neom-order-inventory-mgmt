@@ -82,6 +82,12 @@ export const useAuth = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log("User authenticated, should navigate to dashboard");
+    }
+  }, [isAuthenticated, user]);
+
   const logout = useCallback(() => {
     pb.authStore.clear();
     setUser(null);
