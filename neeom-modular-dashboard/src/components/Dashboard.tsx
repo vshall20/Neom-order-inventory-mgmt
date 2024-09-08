@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
 
@@ -6,16 +6,17 @@ const pb = new PocketBase('http://127.0.0.1:8090'); // Replace with your Pocketb
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoggedOut, setIsLoggedOut] = useState(false);
 
   useEffect(() => {
-    if (!pb.authStore.isValid) {
+    if (!pb.authStore.isValid || isLoggedOut) {
       navigate('/login', { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, isLoggedOut]);
 
   const handleLogout = () => {
     pb.authStore.clear();
-    // The navigation will be handled by the useEffect hook in App.tsx
+    setIsLoggedOut(true);
   };
   return (
     <div className="min-h-screen bg-gray-100">
