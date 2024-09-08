@@ -1,16 +1,50 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import PocketBase from 'pocketbase';
+
+const pb = new PocketBase('http://127.0.0.1:8090');
+
+interface OrderMetrics {
+  totalOrders: number;
+  pendingOrders: number;
+  revenue: number;
+}
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
+  const [metrics, setMetrics] = useState<OrderMetrics>({
+    totalOrders: 0,
+    pendingOrders: 0,
+    revenue: 0,
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login', { replace: true });
+    } else {
+      fetchOrderMetrics();
     }
   }, [isAuthenticated, navigate]);
+
+  const fetchOrderMetrics = async () => {
+    try {
+      const totalOrders = await pb.collection('orders').getFullList({ filter: 'created > "2023-01-01 00:00:00"' });
+      const pendingOrders = await pb.collection('orders').getFullList({ filter: 'status = "Pending"' });
+      
+      // Calculate total revenue (this is a placeholder calculation)
+      const revenue = totalOrders.reduce((sum, order) => sum + (parseFloat(order.order_quantity) || 0), 0);
+
+      setMetrics({
+        totalOrders: totalOrders.length,
+        pendingOrders: pendingOrders.length,
+        revenue: revenue,
+      });
+    } catch (error) {
+      console.error('Error fetching order metrics:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -81,10 +115,10 @@ const Dashboard: React.FC = () => {
                       <div className="ml-5 w-0 flex-1">
                         <dl>
                           <dt className="text-sm font-medium text-gray-500 truncate">
-                            Total Orders
+                            Total Orders (This Year)
                           </dt>
                           <dd className="text-3xl font-semibold text-gray-900">
-                            12,345
+                            {metrics.totalOrders}
                           </dd>
                         </dl>
                       </div>
@@ -110,10 +144,10 @@ const Dashboard: React.FC = () => {
                       <div className="ml-5 w-0 flex-1">
                         <dl>
                           <dt className="text-sm font-medium text-gray-500 truncate">
-                            Revenue
+                            Revenue (Placeholder)
                           </dt>
                           <dd className="text-3xl font-semibold text-gray-900">
-                            $87,654
+                            ${metrics.revenue.toFixed(2)}
                           </dd>
                         </dl>
                       </div>
@@ -142,7 +176,7 @@ const Dashboard: React.FC = () => {
                             Pending Orders
                           </dt>
                           <dd className="text-3xl font-semibold text-gray-900">
-                            23
+                            {metrics.pendingOrders}
                           </dd>
                         </dl>
                       </div>
