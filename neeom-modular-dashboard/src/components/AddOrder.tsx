@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../context/AuthContext";
 import PocketBase from "pocketbase";
 
 const pb = new PocketBase("http://127.0.0.1:8090");
