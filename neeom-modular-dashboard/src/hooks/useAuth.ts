@@ -71,6 +71,8 @@ export const useAuth = () => {
     pb.authStore.clear();
     setUser(null);
     setIsAuthenticated(false);
+    // Force a reload of the application to ensure all states are reset
+    window.location.href = '/';
   }, []);
 
   return { user, isAuthenticated, login, logout };
