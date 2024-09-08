@@ -23,6 +23,8 @@ const Dashboard: React.FC = () => {
     console.log('Dashboard component mounted');
     if (user?.role === 'admin') {
       fetchOrderMetrics();
+    } else {
+      console.log('User is not an admin, skipping metrics fetch');
     }
   }, [user]);
 
@@ -31,20 +33,34 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   const fetchOrderMetrics = async () => {
+    if (user?.role !== 'admin') {
+      console.log('User is not an admin, cannot fetch metrics');
+      return;
+    }
+
     try {
-      const totalOrders = await pb.collection('orders').getFullList({ filter: 'created > "2023-01-01 00:00:00"' });
-      const pendingOrders = await pb.collection('orders').getFullList({ filter: 'status = "Pending"' });
+      const totalOrdersResult = await pb.collection('orders').getList(1, 1, {
+        filter: 'created > "2023-01-01 00:00:00"',
+        $cancelKey: 'total-orders',
+      });
+      const pendingOrdersResult = await pb.collection('orders').getList(1, 1, {
+        filter: 'status = "Pending"',
+        $cancelKey: 'pending-orders',
+      });
       
       // Calculate total revenue (this is a placeholder calculation)
-      const revenue = totalOrders.reduce((sum, order) => sum + (parseFloat(order.order_quantity) || 0), 0);
+      const revenue = totalOrdersResult.items.reduce((sum, order) => sum + (parseFloat(order.order_quantity) || 0), 0);
 
       setMetrics({
-        totalOrders: totalOrders.length,
-        pendingOrders: pendingOrders.length,
+        totalOrders: totalOrdersResult.totalItems,
+        pendingOrders: pendingOrdersResult.totalItems,
         revenue: revenue,
       });
     } catch (error) {
       console.error('Error fetching order metrics:', error);
+      if (error.status === 403) {
+        console.log('Permission denied: User does not have access to fetch metrics');
+      }
     }
   };
 
