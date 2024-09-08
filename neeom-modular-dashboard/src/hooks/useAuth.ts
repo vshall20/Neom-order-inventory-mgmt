@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PocketBase from 'pocketbase';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
@@ -13,42 +13,39 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      if (pb.authStore.isValid) {
-        try {
-          const authData = await pb.collection('users').authRefresh();
-          setUser({
-            id: authData.record.id,
-            email: authData.record.email,
-            role: authData.record.role,
-          });
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Failed to refresh auth:', error);
-          pb.authStore.clear();
-          setIsAuthenticated(false);
-        }
-      }
-    };
-
-    loadUser();
-
-    return pb.authStore.onChange((token, model) => {
-      setIsAuthenticated(!!model);
-      if (model) {
+  const loadUser = useCallback(async () => {
+    if (pb.authStore.isValid) {
+      try {
+        const authData = await pb.collection('users').authRefresh();
         setUser({
-          id: model.id,
-          email: model.email,
-          role: model.role,
+          id: authData.record.id,
+          email: authData.record.email,
+          role: authData.record.role,
         });
-      } else {
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Failed to refresh auth:', error);
+        pb.authStore.clear();
+        setIsAuthenticated(false);
         setUser(null);
       }
-    });
+    } else {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  useEffect(() => {
+    loadUser();
+
+    const unsubscribe = pb.authStore.onChange(() => {
+      loadUser();
+    });
+
+    return unsubscribe;
+  }, [loadUser]);
+
+  const login = useCallback(async (email: string, password: string) => {
     try {
       const authData = await pb.collection('users').authWithPassword(email, password);
       setUser({
@@ -62,13 +59,13 @@ export const useAuth = () => {
       console.error('Login failed:', error);
       return false;
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     pb.authStore.clear();
     setUser(null);
     setIsAuthenticated(false);
-  };
+  }, []);
 
   return { user, isAuthenticated, login, logout };
 };
