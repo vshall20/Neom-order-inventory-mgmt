@@ -10,7 +10,7 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
 
   useEffect(() => {
-    const unsubscribe = pb.authStore.onChange((token, model) => {
+    const unsubscribe = pb.authStore.onChange(() => {
       setIsAuthenticated(pb.authStore.isValid);
     });
 
