@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
 import { useAuth } from '../hooks/useAuth';
@@ -32,11 +32,15 @@ const AddOrder: React.FC = () => {
   const [orderTypes, setOrderTypes] = useState<OrderType[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const checkUserRole = useCallback(() => {
     if (user?.role !== 'admin') {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    checkUserRole();
+  }, [checkUserRole]);
 
   useEffect(() => {
     const fetchAreasAndOrderTypes = async () => {
