@@ -11,8 +11,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const authData = pb.authStore.model;
-      setIsAuthenticated(!!authData);
+      const isValid = pb.authStore.isValid;
+      setIsAuthenticated(isValid);
     };
 
     checkAuth();
