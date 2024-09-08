@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import PocketBase from "pocketbase";
 
 const pb = new PocketBase("http://127.0.0.1:8090");
@@ -12,9 +12,10 @@ interface User {
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadUser = useCallback(async () => {
-    if (pb.authStore.isValid) {
+    if (pb.authStore.isValid && !user) {
       try {
         const authData = await pb.collection("users").authRefresh();
         setUser({
@@ -31,23 +32,33 @@ export const useAuth = () => {
           setUser(null);
         }
       }
-    } else {
+    } else if (!pb.authStore.isValid) {
       setIsAuthenticated(false);
       setUser(null);
     }
-  }, []);
+  }, [user]);
+
+  const debouncedLoadUser = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    refreshTimeoutRef.current = setTimeout(loadUser, 300);
+  }, [loadUser]);
 
   useEffect(() => {
-    loadUser();
+    debouncedLoadUser();
 
     const unsubscribe = pb.authStore.onChange(() => {
-      loadUser();
+      debouncedLoadUser();
     });
 
     return () => {
       unsubscribe();
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
     };
-  }, [loadUser]);
+  }, [debouncedLoadUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
