@@ -19,7 +19,7 @@ export const useAuth = () => {
   const loadUser = useCallback(async () => {
     if (isRefreshing.current) return;
 
-    if (pb.authStore.isValid && !user) {
+    if (pb.authStore.isValid) {
       const now = Date.now();
       if (now - lastRefreshTime.current < 60000) {
         return;
@@ -34,7 +34,7 @@ export const useAuth = () => {
           email: authData.record.email,
           role: authData.record.role,
         });
-        if (!isAuthenticated) setIsAuthenticated(true);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error("Failed to refresh auth:", error);
         if (error.status === 401) {
@@ -45,23 +45,20 @@ export const useAuth = () => {
       } finally {
         isRefreshing.current = false;
       }
-    } else if (!pb.authStore.isValid) {
+    } else {
       setIsAuthenticated(false);
       setUser(null);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    const initialLoad = async () => {
-      await loadUser();
-    };
-    initialLoad();
+    loadUser();
 
     const unsubscribe = pb.authStore.onChange(() => {
       if (refreshTimeoutId.current) {
         clearTimeout(refreshTimeoutId.current);
       }
-      refreshTimeoutId.current = setTimeout(loadUser, 100);
+      refreshTimeoutId.current = setTimeout(loadUser, 300);
     });
 
     return () => {
