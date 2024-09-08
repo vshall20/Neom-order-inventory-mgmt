@@ -34,7 +34,7 @@ export const useAuth = () => {
           email: authData.record.email,
           role: authData.record.role,
         });
-        setIsAuthenticated(true);
+        if (!isAuthenticated) setIsAuthenticated(true);
       } catch (error) {
         console.error("Failed to refresh auth:", error);
         if (error.status === 401) {
