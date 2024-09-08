@@ -6,21 +6,33 @@ import AddOrder from './components/AddOrder';
 import { useAuth } from './hooks/useAuth';
 
 const App: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route 
+          path="/login" 
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
+        />
         <Route
           path="/dashboard"
           element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />}
         />
         <Route
           path="/add-order"
-          element={isAuthenticated ? <AddOrder /> : <Navigate to="/login" replace />}
+          element={
+            isAuthenticated && user?.role === 'admin' 
+              ? <AddOrder /> 
+              : isAuthenticated 
+                ? <Navigate to="/dashboard" replace /> 
+                : <Navigate to="/login" replace />
+          }
         />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route 
+          path="/" 
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} 
+        />
       </Routes>
     </Router>
   );

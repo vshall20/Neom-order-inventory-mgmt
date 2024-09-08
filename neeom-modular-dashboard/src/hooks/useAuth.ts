@@ -13,14 +13,9 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
   const refreshTimeoutRef = useRef<number | null>(null);
-  const [, setAuthChangeCounter] = useState(0);
-
-  const forceUpdate = useCallback(() => {
-    setAuthChangeCounter(prev => prev + 1);
-  }, []);
 
   const loadUser = useCallback(async () => {
-    if (pb.authStore.isValid && !user) {
+    if (pb.authStore.isValid) {
       try {
         const authData = await pb.collection("users").authRefresh();
         setUser({
@@ -37,24 +32,17 @@ export const useAuth = () => {
           setUser(null);
         }
       }
-    } else if (!pb.authStore.isValid) {
+    } else {
       setIsAuthenticated(false);
       setUser(null);
     }
-  }, [user]);
-
-  const debouncedLoadUser = useCallback(() => {
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-    }
-    refreshTimeoutRef.current = window.setTimeout(loadUser, 30000);
-  }, [loadUser]);
+  }, []);
 
   useEffect(() => {
-    debouncedLoadUser();
+    loadUser();
 
     const unsubscribe = pb.authStore.onChange(() => {
-      debouncedLoadUser();
+      loadUser();
     });
 
     return () => {
@@ -63,7 +51,7 @@ export const useAuth = () => {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [debouncedLoadUser]);
+  }, [loadUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
@@ -77,25 +65,20 @@ export const useAuth = () => {
       };
       setUser(userData);
       setIsAuthenticated(true);
-      forceUpdate();
       console.log("Login successful:", userData);
       return true;
     } catch (error) {
       console.error("Login failed:", error);
       setUser(null);
       setIsAuthenticated(false);
-      forceUpdate();
       return false;
     }
-  }, [forceUpdate]);
-
+  }, []);
 
   const logout = useCallback(() => {
     pb.authStore.clear();
     setUser(null);
     setIsAuthenticated(false);
-    // Force a reload of the application to ensure all states are reset
-    window.location.href = "/";
   }, []);
 
   return { user, isAuthenticated, login, logout };

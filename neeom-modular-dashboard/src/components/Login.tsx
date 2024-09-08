@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const Login: React.FC = () => {
@@ -9,6 +9,12 @@ const Login: React.FC = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -16,7 +22,6 @@ const Login: React.FC = () => {
       const success = await login(email, password);
       if (success) {
         console.log('Login successful, authentication state updated');
-        navigate('/dashboard');
       } else {
         setError('Invalid email or password');
       }
@@ -25,10 +30,6 @@ const Login: React.FC = () => {
       console.error('Login error:', err);
     }
   };
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 py-12 px-4 sm:px-6 lg:px-8">
