@@ -39,6 +39,15 @@ const AddOrder: React.FC = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    if (user?.id) {
+      setFormData(prevData => ({
+        ...prevData,
+        created_by: user.id
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
     const fetchAreasAndOrderTypes = async () => {
       try {
         const areasResult = await pb.collection('areas').getFullList<Area>();
