@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PocketBase from 'pocketbase';
+import { useAuth } from '../hooks/useAuth';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -15,10 +16,18 @@ interface OrderType {
 }
 
 const AddOrder: React.FC = () => {
-  const [customerName, setCustomerName] = useState('');
-  const [orderType, setOrderType] = useState('');
-  const [area, setArea] = useState('');
-  const [orderDetails, setOrderDetails] = useState('');
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    order_id: '',
+    party_id: '',
+    area: '',
+    order_type: '',
+    order_quantity: '',
+    sqft: '',
+    order_date: new Date().toISOString().split('T')[0],
+    status: 'Pending',
+    created_by: user?.id || '',
+  });
   const [areas, setAreas] = useState<Area[]>([]);
   const [orderTypes, setOrderTypes] = useState<OrderType[]>([]);
   const navigate = useNavigate();
@@ -38,15 +47,18 @@ const AddOrder: React.FC = () => {
     fetchAreasAndOrderTypes();
   }, []);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await pb.collection('orders').create({
-        customer_name: customerName,
-        order_type: orderType,
-        area: area,
-        order_details: orderDetails,
-      });
+      await pb.collection('orders').create(formData);
       navigate('/dashboard');
     } catch (error) {
       console.error('Error creating order:', error);
@@ -67,22 +79,36 @@ const AddOrder: React.FC = () => {
             <form onSubmit={handleSubmit} className="divide-y divide-gray-200">
               <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
                 <div className="flex flex-col">
-                  <label className="leading-loose">Customer Name</label>
+                  <label className="leading-loose">Order ID</label>
                   <input
                     type="text"
+                    name="order_id"
                     className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                    placeholder="Customer name"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Order ID"
+                    value={formData.order_id}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="leading-loose">Party ID</label>
+                  <input
+                    type="text"
+                    name="party_id"
+                    className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                    placeholder="Party ID"
+                    value={formData.party_id}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
                 <div className="flex flex-col">
                   <label className="leading-loose">Order Type</label>
                   <select
+                    name="order_type"
                     className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                    value={orderType}
-                    onChange={(e) => setOrderType(e.target.value)}
+                    value={formData.order_type}
+                    onChange={handleInputChange}
                     required
                   >
                     <option value="">Select Order Type</option>
@@ -96,9 +122,10 @@ const AddOrder: React.FC = () => {
                 <div className="flex flex-col">
                   <label className="leading-loose">Area</label>
                   <select
+                    name="area"
                     className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                    value={area}
-                    onChange={(e) => setArea(e.target.value)}
+                    value={formData.area}
+                    onChange={handleInputChange}
                     required
                   >
                     <option value="">Select Area</option>
@@ -110,15 +137,39 @@ const AddOrder: React.FC = () => {
                   </select>
                 </div>
                 <div className="flex flex-col">
-                  <label className="leading-loose">Order Details</label>
-                  <textarea
+                  <label className="leading-loose">Order Quantity</label>
+                  <input
+                    type="number"
+                    name="order_quantity"
                     className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
-                    rows={4}
-                    placeholder="Enter order details"
-                    value={orderDetails}
-                    onChange={(e) => setOrderDetails(e.target.value)}
+                    placeholder="Order Quantity"
+                    value={formData.order_quantity}
+                    onChange={handleInputChange}
                     required
-                  ></textarea>
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="leading-loose">SqFt</label>
+                  <input
+                    type="number"
+                    name="sqft"
+                    className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                    placeholder="SqFt"
+                    value={formData.sqft}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="leading-loose">Order Date</label>
+                  <input
+                    type="date"
+                    name="order_date"
+                    className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                    value={formData.order_date}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
               </div>
               <div className="pt-4 flex items-center space-x-4">
