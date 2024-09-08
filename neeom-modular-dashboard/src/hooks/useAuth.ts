@@ -14,15 +14,18 @@ export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
   const lastRefreshTime = useRef(0);
   const refreshTimeoutId = useRef<NodeJS.Timeout | null>(null);
+  const isRefreshing = useRef(false);
 
   const loadUser = useCallback(async () => {
+    if (isRefreshing.current) return;
+
     if (pb.authStore.isValid && !user) {
       const now = Date.now();
       if (now - lastRefreshTime.current < 60000) {
-        // If less than 1 minute has passed since the last refresh, don't refresh
         return;
       }
 
+      isRefreshing.current = true;
       try {
         lastRefreshTime.current = now;
         const authData = await pb.collection("users").authRefresh();
@@ -34,9 +37,13 @@ export const useAuth = () => {
         setIsAuthenticated(true);
       } catch (error) {
         console.error("Failed to refresh auth:", error);
-        pb.authStore.clear();
-        setIsAuthenticated(false);
-        setUser(null);
+        if (error.status === 401) {
+          pb.authStore.clear();
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } finally {
+        isRefreshing.current = false;
       }
     } else if (!pb.authStore.isValid) {
       setIsAuthenticated(false);
@@ -45,13 +52,16 @@ export const useAuth = () => {
   }, [user]);
 
   useEffect(() => {
-    loadUser();
+    const initialLoad = async () => {
+      await loadUser();
+    };
+    initialLoad();
 
     const unsubscribe = pb.authStore.onChange(() => {
       if (refreshTimeoutId.current) {
         clearTimeout(refreshTimeoutId.current);
       }
-      refreshTimeoutId.current = setTimeout(loadUser, 60000);
+      refreshTimeoutId.current = setTimeout(loadUser, 100);
     });
 
     return () => {
