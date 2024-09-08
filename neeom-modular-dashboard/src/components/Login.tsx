@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PocketBase from 'pocketbase';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,14 +11,19 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (pb.authStore.isValid) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
     try {
       await pb.collection('users').authWithPassword(email, password);
-      // Handle successful login
-      navigate('/dashboard', { replace: true });
+      // The navigation will be handled by the useEffect hook
     } catch (error) {
       console.error('Login failed:', error);
       setError('Invalid email or password. Please try again.');
