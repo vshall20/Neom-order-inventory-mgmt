@@ -33,6 +33,12 @@ const AddOrder: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (user?.role !== 'admin') {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
     const fetchAreasAndOrderTypes = async () => {
       try {
         const areasResult = await pb.collection('areas').getFullList<Area>();
@@ -64,6 +70,10 @@ const AddOrder: React.FC = () => {
       console.error('Error creating order:', error);
     }
   };
+
+  if (user?.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
