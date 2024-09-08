@@ -102,6 +102,10 @@ const AddOrder: React.FC = () => {
     }
   };
 
+  const handleCancel = () => {
+    navigate("/dashboard");
+  };
+
   if (user?.role !== "admin") {
     return null;
   }
@@ -221,6 +225,13 @@ const AddOrder: React.FC = () => {
                   type="submit"
                 >
                   Create Order
+                </button>
+                <button
+                  className="bg-gray-300 flex justify-center items-center w-full text-gray-700 px-4 py-3 rounded-md focus:outline-none"
+                  type="button"
+                  onClick={handleCancel}
+                >
+                  Cancel
                 </button>
               </div>
             </form>
