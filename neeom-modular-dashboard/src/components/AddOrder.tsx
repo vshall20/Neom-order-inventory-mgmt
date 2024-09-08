@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import PocketBase from 'pocketbase';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import PocketBase from "pocketbase";
 
-const pb = new PocketBase('http://127.0.0.1:8090');
+const pb = new PocketBase("http://127.0.0.1:8090");
 
 interface Area {
   id: string;
@@ -18,31 +18,34 @@ interface OrderType {
 const AddOrder: React.FC = () => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    order_id: '',
-    party_id: '',
-    area: '',
-    order_type: '',
-    order_quantity: '',
-    sqft: '',
-    order_date: new Date().toISOString().split('T')[0],
-    status: 'Pending',
-    created_by: user?.id || '',
+    order_id: "",
+    party_id: "",
+    area: "",
+    order_type: "",
+    order_quantity: "",
+    sqft: "",
+    order_date: new Date().toISOString().split("T")[0],
+    status: "Pending",
+    created_by: user?.id || "",
   });
   const [areas, setAreas] = useState<Area[]>([]);
   const [orderTypes, setOrderTypes] = useState<OrderType[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user?.role !== 'admin') {
-      navigate('/dashboard');
+    console.log("useEffect::AddOrder::");
+    console.log({ user });
+
+    if (user?.role !== "admin") {
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
   useEffect(() => {
     if (user?.id) {
-      setFormData(prevData => ({
+      setFormData((prevData) => ({
         ...prevData,
-        created_by: user.id
+        created_by: user.id,
       }));
     }
   }, [user]);
@@ -50,18 +53,22 @@ const AddOrder: React.FC = () => {
   useEffect(() => {
     const fetchAreasAndOrderTypes = async () => {
       if (!pb.authStore.isValid) {
-        console.log('User is not authenticated, skipping fetch');
+        console.log("User is not authenticated, skipping fetch");
         return;
       }
       try {
-        const areasResult = await pb.collection('areas').getFullList<Area>();
-        const orderTypesResult = await pb.collection('order_types').getFullList<OrderType>();
+        const areasResult = await pb.collection("areas").getFullList<Area>();
+        const orderTypesResult = await pb
+          .collection("order_types")
+          .getFullList<OrderType>();
         setAreas(areasResult);
         setOrderTypes(orderTypesResult);
       } catch (error) {
-        console.error('Error fetching areas and order types:', error);
+        console.error("Error fetching areas and order types:", error);
         if (error.status === 403) {
-          console.log('Permission denied: User does not have access to fetch areas and order types');
+          console.log(
+            "Permission denied: User does not have access to fetch areas and order types"
+          );
         }
       }
     };
@@ -69,7 +76,11 @@ const AddOrder: React.FC = () => {
     fetchAreasAndOrderTypes();
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -80,14 +91,14 @@ const AddOrder: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await pb.collection('orders').create(formData);
-      navigate('/dashboard');
+      await pb.collection("orders").create(formData);
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error("Error creating order:", error);
     }
   };
 
-  if (user?.role !== 'admin') {
+  if (user?.role !== "admin") {
     return null;
   }
 
@@ -97,7 +108,9 @@ const AddOrder: React.FC = () => {
         <div className="relative px-4 py-10 bg-white mx-8 md:mx-0 shadow rounded-3xl sm:p-10">
           <div className="max-w-md mx-auto">
             <div className="flex items-center space-x-5">
-              <div className="h-14 w-14 bg-indigo-500 rounded-full flex flex-shrink-0 justify-center items-center text-white text-2xl font-mono">+</div>
+              <div className="h-14 w-14 bg-indigo-500 rounded-full flex flex-shrink-0 justify-center items-center text-white text-2xl font-mono">
+                +
+              </div>
               <div className="block pl-2 font-semibold text-xl self-start text-gray-700">
                 <h2 className="leading-relaxed">Add New Order</h2>
               </div>
