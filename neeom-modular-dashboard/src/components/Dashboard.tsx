@@ -1,22 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PocketBase from 'pocketbase';
-
-const pb = new PocketBase('http://127.0.0.1:8090'); // Replace with your Pocketbase URL
+import { useAuth } from '../hooks/useAuth';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [isLoggedOut, setIsLoggedOut] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
-    if (!pb.authStore.isValid || isLoggedOut) {
+    if (!isAuthenticated) {
       navigate('/login', { replace: true });
     }
-  }, [navigate, isLoggedOut]);
+  }, [isAuthenticated, navigate]);
 
   const handleLogout = () => {
-    pb.authStore.clear();
-    setIsLoggedOut(true);
+    logout();
   };
   return (
     <div className="min-h-screen bg-gray-100">

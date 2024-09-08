@@ -1,39 +1,30 @@
 import React, { useState, useEffect } from "react";
-import PocketBase from "pocketbase";
 import { useNavigate } from "react-router-dom";
-
-const pb = new PocketBase("http://127.0.0.1:8090"); // Replace with your Pocketbase URL
+import { useAuth } from "../hooks/useAuth";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-
-  console.log("Authentication status: ", pb.authStore.isValid);
+  const { isAuthenticated, login } = useAuth();
 
   useEffect(() => {
-    console.log("Authentication status in UseEffect: ", pb.authStore.isValid);
-    if (pb.authStore.isValid || isLoggedIn) {
+    if (isAuthenticated) {
       navigate("/dashboard", { replace: true });
     }
-  }, [navigate, isLoggedIn]);
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    try {
-      await pb.collection("users").authWithPassword(email, password);
-      setIsLoggedIn(true);
-    } catch (error) {
-      console.error("Login failed:", error);
+    const success = await login(email, password);
+    if (!success) {
       setError("Invalid email or password. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   return (
