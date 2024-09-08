@@ -42,7 +42,7 @@ export const useAuth = () => {
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
     }
-    refreshTimeoutRef.current = setTimeout(loadUser, 300);
+    refreshTimeoutRef.current = setTimeout(loadUser, 30000);
   }, [loadUser]);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export const useAuth = () => {
     setUser(null);
     setIsAuthenticated(false);
     // Force a reload of the application to ensure all states are reset
-    window.location.href = '/';
+    window.location.href = "/";
   }, []);
 
   return { user, isAuthenticated, login, logout };
