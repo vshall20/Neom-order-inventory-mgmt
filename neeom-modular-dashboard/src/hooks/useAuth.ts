@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import PocketBase from 'pocketbase';
+import { useState, useEffect, useCallback, useRef } from "react";
+import PocketBase from "pocketbase";
 
-const pb = new PocketBase('http://127.0.0.1:8090');
+const pb = new PocketBase("http://127.0.0.1:8090");
 
 interface User {
   id: string;
   email: string;
-  role: 'admin' | 'member';
+  role: "admin" | "member";
 }
 
 export const useAuth = () => {
@@ -25,7 +25,7 @@ export const useAuth = () => {
 
       try {
         lastRefreshTime.current = now;
-        const authData = await pb.collection('users').authRefresh();
+        const authData = await pb.collection("users").authRefresh();
         setUser({
           id: authData.record.id,
           email: authData.record.email,
@@ -33,7 +33,7 @@ export const useAuth = () => {
         });
         setIsAuthenticated(true);
       } catch (error) {
-        console.error('Failed to refresh auth:', error);
+        console.error("Failed to refresh auth:", error);
         pb.authStore.clear();
         setIsAuthenticated(false);
         setUser(null);
@@ -51,7 +51,7 @@ export const useAuth = () => {
       if (refreshTimeoutId.current) {
         clearTimeout(refreshTimeoutId.current);
       }
-      refreshTimeoutId.current = setTimeout(loadUser, 100);
+      refreshTimeoutId.current = setTimeout(loadUser, 60000);
     });
 
     return () => {
@@ -64,7 +64,10 @@ export const useAuth = () => {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const authData = await pb.collection('users').authWithPassword(email, password);
+      const authData = await pb
+        .collection("users")
+        .authWithPassword(email, password);
+      lastRefreshTime.current = Date.now();
       setUser({
         id: authData.record.id,
         email: authData.record.email,
@@ -73,7 +76,7 @@ export const useAuth = () => {
       setIsAuthenticated(true);
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error("Login failed:", error);
       return false;
     }
   }, []);
