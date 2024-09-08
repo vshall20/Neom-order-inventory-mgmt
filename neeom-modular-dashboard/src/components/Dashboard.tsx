@@ -21,9 +21,11 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     console.log('Dashboard component mounted');
-    if (user?.role === 'admin') {
+    if (user?.role === 'admin' && pb.authStore.isValid) {
       fetchOrderMetrics();
-    } else {
+    } else if (!user) {
+      console.log('User is not authenticated, skipping metrics fetch');
+    } else if (user.role !== 'admin') {
       console.log('User is not an admin, skipping metrics fetch');
     }
   }, [user]);
@@ -33,6 +35,10 @@ const Dashboard: React.FC = () => {
   }, [user]);
 
   const fetchOrderMetrics = async () => {
+    if (!pb.authStore.isValid) {
+      console.log('User is not authenticated, cannot fetch metrics');
+      return;
+    }
     if (user?.role !== 'admin') {
       console.log('User is not an admin, cannot fetch metrics');
       return;

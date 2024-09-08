@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PocketBase from 'pocketbase';
 import { useAuth } from '../hooks/useAuth';
+import PocketBase from 'pocketbase';
 
 const pb = new PocketBase('http://127.0.0.1:8090');
 
@@ -49,6 +49,10 @@ const AddOrder: React.FC = () => {
 
   useEffect(() => {
     const fetchAreasAndOrderTypes = async () => {
+      if (!pb.authStore.isValid) {
+        console.log('User is not authenticated, skipping fetch');
+        return;
+      }
       try {
         const areasResult = await pb.collection('areas').getFullList<Area>();
         const orderTypesResult = await pb.collection('order_types').getFullList<OrderType>();
@@ -56,6 +60,9 @@ const AddOrder: React.FC = () => {
         setOrderTypes(orderTypesResult);
       } catch (error) {
         console.error('Error fetching areas and order types:', error);
+        if (error.status === 403) {
+          console.log('Permission denied: User does not have access to fetch areas and order types');
+        }
       }
     };
 
