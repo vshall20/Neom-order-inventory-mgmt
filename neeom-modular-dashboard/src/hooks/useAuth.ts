@@ -12,7 +12,7 @@ interface User {
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimeoutRef = useRef<number | null>(null);
   const [, setAuthChangeCounter] = useState(0);
 
   const forceUpdate = useCallback(() => {
@@ -29,9 +29,9 @@ export const useAuth = () => {
           role: authData.record.role,
         });
         setIsAuthenticated(true);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Failed to refresh auth:", error);
-        if (error.status === 401) {
+        if (error instanceof Error && 'status' in error && error.status === 401) {
           pb.authStore.clear();
           setIsAuthenticated(false);
           setUser(null);
@@ -47,7 +47,7 @@ export const useAuth = () => {
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
     }
-    refreshTimeoutRef.current = setTimeout(loadUser, 30000);
+    refreshTimeoutRef.current = window.setTimeout(loadUser, 30000);
   }, [loadUser]);
 
   useEffect(() => {
