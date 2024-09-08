@@ -15,8 +15,9 @@ const Login: React.FC = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        console.log('Login successful, navigating to dashboard');
+        console.log('Login successful, attempting to navigate to dashboard');
         navigate('/dashboard');
+        console.log('Navigation to dashboard completed');
       } else {
         setError('Invalid email or password');
       }

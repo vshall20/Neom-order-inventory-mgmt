@@ -20,8 +20,13 @@ const Dashboard: React.FC = () => {
   });
 
   useEffect(() => {
+    console.log('Dashboard component mounted');
     fetchOrderMetrics();
   }, []);
+
+  useEffect(() => {
+    console.log('Current user in Dashboard:', user);
+  }, [user]);
 
   const fetchOrderMetrics = async () => {
     try {
