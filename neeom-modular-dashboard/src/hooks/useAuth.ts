@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PocketBase from "pocketbase";
 
 const pb = new PocketBase("http://127.0.0.1:8090");
@@ -12,22 +12,10 @@ interface User {
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
-  const lastRefreshTime = useRef(0);
-  const refreshTimeoutId = useRef<NodeJS.Timeout | null>(null);
-  const isRefreshing = useRef(false);
 
   const loadUser = useCallback(async () => {
-    if (isRefreshing.current) return;
-
     if (pb.authStore.isValid) {
-      const now = Date.now();
-      if (now - lastRefreshTime.current < 60000) {
-        return;
-      }
-
-      isRefreshing.current = true;
       try {
-        lastRefreshTime.current = now;
         const authData = await pb.collection("users").authRefresh();
         setUser({
           id: authData.record.id,
@@ -42,8 +30,6 @@ export const useAuth = () => {
           setIsAuthenticated(false);
           setUser(null);
         }
-      } finally {
-        isRefreshing.current = false;
       }
     } else {
       setIsAuthenticated(false);
@@ -55,17 +41,11 @@ export const useAuth = () => {
     loadUser();
 
     const unsubscribe = pb.authStore.onChange(() => {
-      if (refreshTimeoutId.current) {
-        clearTimeout(refreshTimeoutId.current);
-      }
-      refreshTimeoutId.current = setTimeout(loadUser, 300);
+      loadUser();
     });
 
     return () => {
       unsubscribe();
-      if (refreshTimeoutId.current) {
-        clearTimeout(refreshTimeoutId.current);
-      }
     };
   }, [loadUser]);
 
@@ -74,7 +54,6 @@ export const useAuth = () => {
       const authData = await pb
         .collection("users")
         .authWithPassword(email, password);
-      lastRefreshTime.current = Date.now();
       setUser({
         id: authData.record.id,
         email: authData.record.email,
