@@ -9,16 +9,17 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
   console.log("Authentication status: ", pb.authStore.isValid);
 
   useEffect(() => {
     console.log("Authentication status in UseEffect: ", pb.authStore.isValid);
-    if (pb.authStore.isValid) {
+    if (pb.authStore.isValid || isLoggedIn) {
       navigate("/dashboard", { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, isLoggedIn]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +27,7 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await pb.collection("users").authWithPassword(email, password);
-      // The navigation will be handled by the useEffect hook
+      setIsLoggedIn(true);
     } catch (error) {
       console.error("Login failed:", error);
       setError("Invalid email or password. Please try again.");
