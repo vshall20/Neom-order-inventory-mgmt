@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import PocketBase from 'pocketbase';
 
@@ -12,8 +12,7 @@ interface OrderMetrics {
 }
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { logout, user } = useAuth();
   const [metrics, setMetrics] = useState<OrderMetrics>({
     totalOrders: 0,
     pendingOrders: 0,
@@ -21,12 +20,8 @@ const Dashboard: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login', { replace: true });
-    } else {
-      fetchOrderMetrics();
-    }
-  }, [isAuthenticated, navigate]);
+    fetchOrderMetrics();
+  }, []);
 
   const fetchOrderMetrics = async () => {
     try {
