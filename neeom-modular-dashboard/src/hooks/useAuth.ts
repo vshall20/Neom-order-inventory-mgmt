@@ -13,6 +13,11 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [, setAuthChangeCounter] = useState(0);
+
+  const forceUpdate = useCallback(() => {
+    setAuthChangeCounter(prev => prev + 1);
+  }, []);
 
   const loadUser = useCallback(async () => {
     if (pb.authStore.isValid && !user) {
@@ -72,15 +77,17 @@ export const useAuth = () => {
       };
       setUser(userData);
       setIsAuthenticated(true);
+      forceUpdate();
       console.log("Login successful:", userData);
       return true;
     } catch (error) {
       console.error("Login failed:", error);
       setUser(null);
       setIsAuthenticated(false);
+      forceUpdate();
       return false;
     }
-  }, []);
+  }, [forceUpdate]);
 
   useEffect(() => {
     if (isAuthenticated && user) {

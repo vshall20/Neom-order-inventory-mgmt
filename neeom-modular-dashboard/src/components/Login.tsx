@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -6,8 +6,14 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,9 +21,7 @@ const Login: React.FC = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        console.log('Login successful, attempting to navigate to dashboard');
-        navigate('/dashboard');
-        console.log('Navigation to dashboard completed');
+        console.log('Login successful, authentication state updated');
       } else {
         setError('Invalid email or password');
       }
