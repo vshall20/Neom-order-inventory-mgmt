@@ -9,7 +9,7 @@ const Dashboard: React.FC = () => {
 
   const handleLogout = () => {
     pb.authStore.clear();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
   return (
     <div className="min-h-screen bg-gray-100">

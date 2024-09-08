@@ -16,10 +16,9 @@ const Login: React.FC = () => {
     setError('');
     setIsLoading(true);
     try {
-      const authData = await pb.collection('users').authWithPassword(email, password);
-      console.log(authData);
+      await pb.collection('users').authWithPassword(email, password);
       // Handle successful login
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Login failed:', error);
       setError('Invalid email or password. Please try again.');
