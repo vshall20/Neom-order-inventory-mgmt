@@ -65,15 +65,19 @@ export const useAuth = () => {
       const authData = await pb
         .collection("users")
         .authWithPassword(email, password);
-      setUser({
+      const userData = {
         id: authData.record.id,
         email: authData.record.email,
         role: authData.record.role,
-      });
+      };
+      setUser(userData);
       setIsAuthenticated(true);
+      console.log("Login successful:", userData);
       return true;
     } catch (error) {
       console.error("Login failed:", error);
+      setUser(null);
+      setIsAuthenticated(false);
       return false;
     }
   }, []);
